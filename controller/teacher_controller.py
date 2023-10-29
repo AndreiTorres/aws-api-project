@@ -7,20 +7,20 @@ teacher_router = APIRouter()
 teacherService = TeacherService()
 
 @teacher_router.get("/profesores")
-def getAllStudents(response: Response):
+def getAllTeachers(response: Response):
     response.status_code = status.HTTP_200_OK
     response.media_type = "application/json"
     return teacherService.get_all_teachers()
 
 @teacher_router.post("/profesores")
-def saveStudent(teacher: Annotated[Teacher, Body()], response: Response):
+def saveTeacher(teacher: Annotated[Teacher, Body()], response: Response):
         response.status_code = status.HTTP_201_CREATED
         response.media_type = "application/json"
         teacherService.save_teacher(teacher)
         return teacher
 
 @teacher_router.get("/profesores/{id}")
-def getStudentById(id: int, response: Response):
+def getTeacherById(id: int, response: Response):
     teacher = teacherService.get_teacher_by_id(id)
     if teacher:
         response.status_code = status.HTTP_200_OK
@@ -30,7 +30,7 @@ def getStudentById(id: int, response: Response):
     raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Teacher not found")
 
 @teacher_router.put("/profesores/{id}")
-def updateStudent(id: int, teacherUpdated: Annotated[Teacher, Body()], response: Response):
+def updateTeacher(id: int, teacherUpdated: Annotated[Teacher, Body()], response: Response):
     student = teacherService.update_teacher(id, teacherUpdated)
 
     if student:
@@ -41,7 +41,7 @@ def updateStudent(id: int, teacherUpdated: Annotated[Teacher, Body()], response:
     raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Teacher not found")
 
 @teacher_router.delete("/profesores/{id}")
-def deleteStudent(id: int, response: Response):
+def deleteTeacher(id: int, response: Response):
 
     wasDeleted = teacherService.delete_teacher(id)
 
