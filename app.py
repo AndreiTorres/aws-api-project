@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Response, status, Request
 from fastapi.exceptions import RequestValidationError
-from controller.student_controller import student_router;
+from controller.student_controller import student_router
+from controller.teacher_controller import teacher_router
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
@@ -19,4 +20,6 @@ async def custom_validation_exception_handler(request: Request, exc: RequestVali
     )
 
 app.add_exception_handler(RequestValidationError, custom_validation_exception_handler)
+
 app.include_router(student_router)
+app.include_router(teacher_router)
