@@ -16,8 +16,8 @@ def getAllTeachers(response: Response):
 def saveTeacher(teacher: Annotated[Teacher, Body()], response: Response):
         response.status_code = status.HTTP_201_CREATED
         response.media_type = "application/json"
-        teacherService.save_teacher(teacher)
-        return teacher
+        new_teacher = teacherService.save_teacher(teacher)
+        return new_teacher
 
 @teacher_router.get("/profesores/{id}")
 def getTeacherById(id: int, response: Response):
@@ -31,12 +31,12 @@ def getTeacherById(id: int, response: Response):
 
 @teacher_router.put("/profesores/{id}")
 def updateTeacher(id: int, teacherUpdated: Annotated[Teacher, Body()], response: Response):
-    student = teacherService.update_teacher(id, teacherUpdated)
+    teacher = teacherService.update_teacher(id, teacherUpdated)
 
-    if student:
+    if teacher:
         response.status_code = status.HTTP_200_OK
         response.media_type = "application/json"
-        return teacherUpdated
+        return teacher
      
     raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Teacher not found")
 

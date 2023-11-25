@@ -6,9 +6,6 @@ from schemas.student_schema import StudentSchema
 
 class StudentService:
 
-
-    STUDENTS_DATA = []
-
     def get_all_students(self):
         session = MySQLCon()
         students = session.query(StudentSchema).all()
@@ -59,7 +56,7 @@ class StudentService:
         rows_affected = session.query(StudentSchema).filter(StudentSchema.id == id).update(dict(studentUpdated))
         session.commit()
         session.close()
-        
+
         if rows_affected > 0:
             return self.get_student_by_id(id)
         

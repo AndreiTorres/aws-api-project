@@ -1,32 +1,74 @@
+from config.database import MySQLCon
 from model.teacher_model import Teacher
+from schemas.teacher_schema import TeacherSchema
 
 
 class TeacherService:
 
-    TEACHER_DATA = []
-
     def get_all_teachers(self):
-        return self.TEACHER_DATA
+        session = MySQLCon()
+        teachers = session.query(TeacherSchema).all()
+        session.close()
+        
+        return teachers
     
     def save_teacher(self, teacher: Teacher):
-        self.TEACHER_DATA.append(teacher)
+        session = MySQLCon()
+
+        new_teacher = TeacherSchema(
+            numeroEmpleado = teacher.numeroEmpleado,
+            nombres = teacher.nombres,
+            apellidos = teacher.apellidos,
+            horasClase = teacher.horasClase
+        )
+
+        session.add(new_teacher)
+        session.commit()
+        session.refresh(new_teacher)
+        session.close()
+
+        new_teacher_clean = {key: value for key, value in new_teacher.__dict__.items() if not key.startswith('_')}
+        return new_teacher_clean
 
     def get_teacher_by_id(self, id: int):
-        for teacher in self.TEACHER_DATA:
-            if teacher.id == id:
-                return teacher
-        return None
+
+        session = MySQLCon()
+
+        teacher = session.query(TeacherSchema).filter(TeacherSchema.id == id).first()
+        session.close()
+        
+        if not teacher:
+            return None
+
+        teacher_clean = {key: value for key, value in teacher.__dict__.items() if not key.startswith('_')}
+        
+        return teacher_clean
+
     
     def update_teacher(self, id: int, teacherUpdated: Teacher):
-        for index, teacher in enumerate(self.TEACHER_DATA):
-            if teacher.id == id:
-                self.TEACHER_DATA[index] = teacherUpdated
-                return teacherUpdated
+        isTeacher = self.get_teacher_by_id(id)
+
+        if not isTeacher:
+            return None
+        
+        session = MySQLCon()
+        rows_affected = session.query(TeacherSchema).filter(TeacherSchema.id == id).update(dict(teacherUpdated))
+        session.commit()
+        session.close()
+
+        if rows_affected > 0:
+            return self.get_teacher_by_id(id)
+        
         return None
     
     def delete_teacher(self, id: int):
-        for teacher in self.TEACHER_DATA:
-            if teacher.id == id:
-                self.TEACHER_DATA.remove(teacher)
-                return True
-        return None
+        isTeacher = self.get_teacher_by_id(id)
+
+        if not isTeacher:
+            return None
+        
+        session = MySQLCon()
+        session.query(TeacherSchema).filter(TeacherSchema.id == id).delete()
+        session.commit()
+        session.close()
+        return True
