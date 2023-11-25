@@ -18,12 +18,13 @@ def getAllStudents(response: Response):
 def saveStudent(student: Annotated[Student, Body()], response: Response):
         response.status_code = status.HTTP_201_CREATED
         response.media_type = "application/json"
-        studentService.save_student(student)
-        return student
+        studentSaved = studentService.save_student(student)
+        return studentSaved
 
 @student_router.get("/alumnos/{id}")
 def getStudentById(id: int, response: Response):
     student = studentService.get_student_by_id(id)
+    
     if student:
         response.status_code = status.HTTP_200_OK
         response.media_type = "application/json"
@@ -38,7 +39,7 @@ def updateStudent(id: int, studentUpdated: Annotated[Student, Body()], response:
     if student:
         response.status_code = status.HTTP_200_OK
         response.media_type = "application/json"
-        return studentUpdated
+        return student
      
     raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
 
