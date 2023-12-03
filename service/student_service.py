@@ -1,9 +1,12 @@
-from fastapi import Depends
+from fastapi import UploadFile
 from config.database import MySQLCon
-from sqlalchemy.orm import Session
 from model.student_model import Student
 from schemas.student_schema import StudentSchema
-from config.connection import sns_client
+from config.connection import sns_client, s3_client
+from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class StudentService:
 
@@ -91,3 +94,18 @@ class StudentService:
         )
 
         return True
+    
+    def uploadPicture(self, id: int, foto: UploadFile):
+        student = self.get_student_by_id(id)
+
+        if not student:
+            return None
+
+        s3_client.upload_fileobj(foto.file, getenv('AWS_BUCKET'), foto.filename, ExtraArgs = {'ACL': 'public-read', 'ContentType': 'multipart/form-data'})
+        
+        fotoPerfilUrl = f"https://andreiapibucket.s3.amazonaws.com/{foto.filename}"
+        
+        student['fotoPerfilUrl'] = fotoPerfilUrl
+        response = self.update_student(id, student)
+        
+        return response

@@ -1,7 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Body, Response, status, HTTPException
-from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
+from fastapi import APIRouter, Body, File, Response, UploadFile, status, HTTPException
 from model.student_model import Student
 from service.student_service import StudentService
 
@@ -78,3 +76,20 @@ def sendEmail(id: int, response: Response):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
     
     response.status_code = status.HTTP_200_OK
+
+@student_router.post("/alumnos/{id}/fotoPerfil")
+def uploadPicture(id: int, foto: Annotated[UploadFile, File()], response: Response):
+    
+    try:
+        res = studentService.uploadPicture(id, foto)
+    except Exception:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+    
+    if not response:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
+    
+    response.status_code = status.HTTP_200_OK
+    response.media_type = "application/json"
+    return res
+    
+    
