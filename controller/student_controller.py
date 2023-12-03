@@ -16,14 +16,22 @@ def getAllStudents(response: Response):
 
 @student_router.post("/alumnos")
 def saveStudent(student: Annotated[Student, Body()], response: Response):
+        
+        try:
+            studentSaved = studentService.save_student(student)
+        except Exception:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+        
         response.status_code = status.HTTP_201_CREATED
         response.media_type = "application/json"
-        studentSaved = studentService.save_student(student)
         return studentSaved
 
 @student_router.get("/alumnos/{id}")
 def getStudentById(id: int, response: Response):
-    student = studentService.get_student_by_id(id)
+    try:
+        student = studentService.get_student_by_id(id)
+    except Exception:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
     
     if student:
         response.status_code = status.HTTP_200_OK
@@ -34,8 +42,12 @@ def getStudentById(id: int, response: Response):
 
 @student_router.put("/alumnos/{id}")
 def updateStudent(id: int, studentUpdated: Annotated[Student, Body()], response: Response):
-    student = studentService.update_student(id, studentUpdated)
-
+    
+    try:
+        student = studentService.update_student(id, studentUpdated)
+    except Exception:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+    
     if student:
         response.status_code = status.HTTP_200_OK
         response.media_type = "application/json"
@@ -45,10 +57,24 @@ def updateStudent(id: int, studentUpdated: Annotated[Student, Body()], response:
 
 @student_router.delete("/alumnos/{id}")
 def deleteStudent(id: int, response: Response):
-
-    wasDeleted = studentService.delete_student(id)
-
+    try:
+        wasDeleted = studentService.delete_student(id)
+    except Exception:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+    
     if not wasDeleted:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
+    
+    response.status_code = status.HTTP_200_OK
+
+@student_router.post("/alumnos/{id}/email")
+def sendEmail(id: int, response: Response):
+    try:
+        wasSend = studentService.send_email(id)
+    except Exception:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+    
+    if not wasSend:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
     
     response.status_code = status.HTTP_200_OK

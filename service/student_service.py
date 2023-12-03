@@ -3,6 +3,7 @@ from config.database import MySQLCon
 from sqlalchemy.orm import Session
 from model.student_model import Student
 from schemas.student_schema import StudentSchema
+from config.connection import sns_client
 
 class StudentService:
 
@@ -73,4 +74,20 @@ class StudentService:
         session.query(StudentSchema).filter(StudentSchema.id == id).delete()
         session.commit()
         session.close()
+        return True
+    
+    def send_email(self, id: int):
+        student = self.get_student_by_id(id)
+
+        if not student:
+            return None
+        
+        message = f"El promedio del alumno {student['nombres']} {student['apellidos']} es {student['promedio']}."
+        
+        response = sns_client.publish(
+            TopicArn = "arn:aws:sns:us-east-1:581050077128:calificaciones",
+            Message = message,
+            Subject = "Calificación"
+        )
+
         return True
