@@ -92,4 +92,30 @@ def uploadPicture(id: int, foto: Annotated[UploadFile, File()], response: Respon
     response.media_type = "application/json"
     return res
     
+@student_router.post("/alumnos/{id}/session/login")
+def login(id: int, body: Body() response: Response):
+    try:
+        response = student_service.login(id, body.password)
+    except Exception:
+        raise HttpException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+
+    if not response:
+        raise HttpException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
     
+    response.status_code = status.HTTP_200_OK
+    
+    return response
+
+@student_router.post("/alumnos/{id}/session/verify")
+def verify(id: int, body: Body() response: Response):
+    try:
+        student_service.verify(id, body.sessionString)
+    except Exception:
+        raise HttpException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+    
+@student_router.post("/alumnos/{id}/session/logout")
+def logout(id: int, body: Body(), response: Response):
+    try:
+        student_service.logout(id, body.sessionString)
+    except Exception:
+        raise HttpException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")

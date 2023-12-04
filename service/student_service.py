@@ -109,3 +109,15 @@ class StudentService:
         response = self.update_student(id, student)
         
         return response
+
+    def login(self, id: int, password: str):
+        student = self.get_student_by_id(id)
+
+        if not student or student['password'] !== password:
+            return None
+        
+        
+
+    def verify(self, id: int, sessionString: str):
+
+    def logout(self, id: int, sessionString: str):
