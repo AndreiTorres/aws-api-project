@@ -1,10 +1,15 @@
 from fastapi import UploadFile
+from boto3.dynamodb.conditions import Attr
 from config.database import MySQLCon
 from model.student_model import Student
 from schemas.student_schema import StudentSchema
-from config.connection import sns_client, s3_client
+from config.connection import sns_client, s3_client, dynamo_client
 from os import getenv
 from dotenv import load_dotenv
+import time
+import uuid
+import string
+import random
 
 load_dotenv()
 
@@ -113,11 +118,72 @@ class StudentService:
     def login(self, id: int, password: str):
         student = self.get_student_by_id(id)
 
-        if not student or student['password'] !== password:
+        if not student: 
+            return None
+
+        if student['password'] != password:
             return None
         
+        table = dynamo_client.Table('sesiones-alumnos')
         
+        sessionString = self.get_random_string(128)
+        table.put_item(
+            Item = {
+                'id': str(uuid.uuid4()),
+                'fecha': int(time.time()),
+                'alumnoId': id,
+                'active': True,
+                'sessionString': sessionString 
+            }
+        )
+
+        return sessionString
 
     def verify(self, id: int, sessionString: str):
+        student = self.get_student_by_id(id)
+
+        if not student:
+            return None
+        
+        table = dynamo_client.Table('sesiones-alumnos')
+        response = table.scan(
+            FilterExpression = Attr('sessionString').eq(sessionString)
+        )
+
+        if response['Items']:
+            is_active = response['Items'][0].get('active', False)
+        if not response['Items'] or not is_active:
+            return None
+        
+        return True
+
 
     def logout(self, id: int, sessionString: str):
+        student = self.get_student_by_id(id)
+
+        if not student:
+            return None
+        
+        table = dynamo_client.Table('sesiones-alumnos')
+        response = table.scan(
+            FilterExpression = Attr('sessionString').eq(sessionString)
+        )
+
+        if response['Items']:
+            id = response['Items'][0].get('id', False)
+        if not response['Items'] or not id:
+            return None
+        
+        table.update_item(
+            Key = {'id': id},
+            UpdateExpression = 'SET active = :active',
+            ExpressionAttributeValues = {':active': False}
+        )
+
+        return True
+
+
+    def get_random_string(self, length) -> str:
+        letters: str = string.ascii_lowercase + string.digits
+        result_str: str = ''.join(random.choice(letters) for i in range(length))
+        return result_str

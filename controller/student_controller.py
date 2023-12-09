@@ -93,29 +93,45 @@ def uploadPicture(id: int, foto: Annotated[UploadFile, File()], response: Respon
     return res
     
 @student_router.post("/alumnos/{id}/session/login")
-def login(id: int, body: Body() response: Response):
+def login(id: int, body: Annotated[dict, Body()], response: Response):
     try:
-        response = student_service.login(id, body.password)
-    except Exception:
-        raise HttpException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+        sessionString = studentService.login(id, body['password']   )
+    except Exception as e:
+        print(e)
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
 
-    if not response:
-        raise HttpException(status.HTTP_404_NOT_FOUND, detail = "Student not found")
+    if not sessionString:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail = "Bad request")
     
     response.status_code = status.HTTP_200_OK
     
-    return response
+    return {'sessionString': sessionString}
 
 @student_router.post("/alumnos/{id}/session/verify")
-def verify(id: int, body: Body() response: Response):
+def verify(id: int, body: Annotated[dict, Body()], response: Response):
     try:
-        student_service.verify(id, body.sessionString)
-    except Exception:
-        raise HttpException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+        res = studentService.verify(id, body['sessionString'])
+    except Exception as e:
+        print(e)
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
     
+    if not res:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail = "Bad request")
+    
+    response.status_code = status.HTTP_200_OK
+
+    return {'message': 'Sesion valida'}
+
 @student_router.post("/alumnos/{id}/session/logout")
-def logout(id: int, body: Body(), response: Response):
+def logout(id: int, body: Annotated[dict, Body()], response: Response):
     try:
-        student_service.logout(id, body.sessionString)
+        res =studentService.logout(id, body['sessionString'])
     except Exception:
-        raise HttpException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail = "An error has ocurred on the server")
+    
+    if not res:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail = "Bad request")
+    
+    response.status_code = status.HTTP_200_OK
+
+    return {'message': 'Sesion cerrada'}
